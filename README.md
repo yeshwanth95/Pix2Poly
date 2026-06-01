@@ -144,7 +144,7 @@ python evaluate_mass_roads_predictions.py --gt-dir data/mass_roads_1500/test/map
 
 ## Citation
 
-If you find our work useful, please consider citing:
+<!-- If you find our work useful, please consider citing:
 ```bibtex
 @misc{adimoolam2024pix2poly,
       title={Pix2Poly: A Sequence Prediction Method for End-to-end Polygonal Building Footprint Extraction from Remote Sensing Imagery},
@@ -154,6 +154,18 @@ If you find our work useful, please consider citing:
       archivePrefix={arXiv},
       primaryClass={cs.CV},
       url={https://arxiv.org/abs/2412.07899},
+}
+``` -->
+
+If you find our work useful, please consider citing:
+```bibtex
+@InProceedings{Adimoolam_2025_WACV,
+    author    = {Adimoolam, Yeshwanth Kumar and Poullis, Charalambos and Averkiou, Melinos},
+    title     = {Pix2Poly: A Sequence Prediction Method for End-to-End Polygonal Building Footprint Extraction from Remote Sensing Imagery},
+    booktitle = {Proceedings of the Winter Conference on Applications of Computer Vision (WACV)},
+    month     = {February},
+    year      = {2025},
+    pages     = {8473-8482}
 }
 ```
 
