@@ -10,6 +10,9 @@ from transformers import top_k_top_p_filtering
 from torchmetrics.functional.classification import binary_jaccard_index, binary_accuracy
 from config import CFG
 
+import sys
+from datetime import datetime
+
 
 def seed_everything(seed=1234):
     random.seed(seed)
@@ -56,7 +59,6 @@ def create_mask(tgt, pad_idx):
     tgt_padding_mask = (tgt == pad_idx)
 
     return tgt_mask, tgt_padding_mask
-
 
 class AverageMeter:
     def __init__(self, name="Metric"):
@@ -356,3 +358,57 @@ def save_single_predictions_as_images(
     torchvision.utils.save_image(y_perm[:, None, :, :]*255, f"{folder}/gt_perm_matrix_{idx}.png")
 
     return metrics_dict
+
+
+def log(message: str, level: str = "INFO") -> None:
+    """Simple logging function that outputs to stderr."""
+    timestamp = datetime.now().isoformat()
+    print(f"[{timestamp}] [{level}] {message}", file=sys.stderr, flush=True)
+
+
+def calculate_slice_bboxes(
+    image_height: int,
+    image_width: int,
+    slice_height: int = 512,
+    slice_width: int = 512,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
+) -> list[list[int]]:
+    """
+    Given the height and width of an image, calculates how to divide the image into
+    overlapping slices according to the height and width provided. These slices are returned
+    as bounding boxes in xyxy format.
+    
+    Args:
+        image_height: Height of the original image.
+        image_width: Width of the original image.
+        slice_height: Height of each slice
+        slice_width: Width of each slice
+        overlap_height_ratio: Fractional overlap in height of each slice (e.g. an overlap of 0.2 for a slice of size 100 yields an overlap of 20 pixels)
+        overlap_width_ratio: Fractional overlap in width of each slice (e.g. an overlap of 0.2 for a slice of size 100 yields an overlap of 20 pixels)
+    
+    Returns:
+        A list of bounding boxes in xyxy format
+    """
+    slice_bboxes = []
+    y_max = y_min = 0
+    y_overlap = int(overlap_height_ratio * slice_height)
+    x_overlap = int(overlap_width_ratio * slice_width)
+    
+    while y_max < image_height:
+        x_min = x_max = 0
+        y_max = y_min + slice_height
+        while x_max < image_width:
+            x_max = x_min + slice_width
+            if y_max > image_height or x_max > image_width:
+                xmax = min(image_width, x_max)
+                ymax = min(image_height, y_max)
+                xmin = max(0, xmax - slice_width)
+                ymin = max(0, ymax - slice_height)
+                slice_bboxes.append([xmin, ymin, xmax, ymax])
+            else:
+                slice_bboxes.append([x_min, y_min, x_max, y_max])
+            x_min = x_max - x_overlap
+        y_min = y_max - y_overlap
+
+    return slice_bboxes

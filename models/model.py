@@ -11,6 +11,7 @@ sys.path.insert(1, os.getcwd())
 from config import CFG
 from utils import (
     create_mask,
+    log
 )
 
 
@@ -128,7 +129,7 @@ class Decoder(nn.Module):
     def init_weights(self):
         for name, p in self.named_parameters():
             if 'encoder_pos_embed' in name or 'decoder_pos_embed' in name:
-                print(f"Skipping initialization of pos embed layers...")
+                log("Skipping initialization of pos embed layers...")
                 continue
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
@@ -269,16 +270,15 @@ if __name__ == "__main__":
     with torch.no_grad():
         for i in range(1 + n_vertices*2):
             try:
-                print(i)
+                log(f"Iteration {i}")
                 preds_p, feats_p = model.predict(image, batch_preds)
-                # print(preds_p.shape, feats_p.shape)
                 if i % 2 == 0:
                     confs_ = torch.softmax(preds_p, dim=-1).sort(axis=-1, descending=True)[0][:, 0].cpu()
                     confs.append(confs_)
                 preds_p = sample(preds_p)
                 batch_preds = torch.cat([batch_preds, preds_p], dim=1)
             except:
-                print(f"Error at iteration: {i}")
+                log(f"Error at iteration: {i}")
         perm_pred = model.scorenet(feats_p)
 
         # Postprocessing.
@@ -302,18 +302,18 @@ if __name__ == "__main__":
         out_coords.extend(all_coords)
         out_confs.extend(out_confs)
 
-    print(f"preds_f shape: {preds_f.shape}")
-    print(f"preds_f grad: {preds_f.requires_grad}")
-    print(f"preds_f min: {preds_f.min()}, max: {preds_f.max()}")
+    log(f"preds_f shape: {preds_f.shape}")
+    log(f"preds_f grad: {preds_f.requires_grad}")
+    log(f"preds_f min: {preds_f.min()}, max: {preds_f.max()}")
 
-    print(f"perm_mat shape: {perm_mat.shape}")
-    print(f"perm_mat grad: {perm_mat.requires_grad}")
-    print(f"perm_mat min: {perm_mat.min()}, max: {preds_f.max()}")
+    log(f"perm_mat shape: {perm_mat.shape}")
+    log(f"perm_mat grad: {perm_mat.requires_grad}")
+    log(f"perm_mat min: {perm_mat.min()}, max: {preds_f.max()}")
 
-    print(f"batch_preds shape: {batch_preds.shape}")
-    print(f"batch_preds grad: {batch_preds.requires_grad}")
-    print(f"batch_preds min: {batch_preds.min()}, max: {batch_preds.max()}")
+    log(f"batch_preds shape: {batch_preds.shape}")
+    log(f"batch_preds grad: {batch_preds.requires_grad}")
+    log(f"batch_preds min: {batch_preds.min()}, max: {batch_preds.max()}")
 
-    print(f"loss : {loss}")
-    print(f"loss grad: {loss.requires_grad}")
+    log(f"loss : {loss}")
+    log(f"loss grad: {loss.requires_grad}")
 

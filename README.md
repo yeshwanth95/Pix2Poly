@@ -178,3 +178,78 @@ This repository benefits from the following open-source work. We thank the autho
 3. [Frame Field Learning](https://github.com/Lydorn/Polygonization-by-Frame-Field-Learning)
 4. [PolyWorld](https://github.com/zorzi-s/PolyWorldPretrainedNetwork)
 5. [HiSup](https://github.com/SarahwXU/HiSup)
+
+## Docker Usage
+
+Pix2Poly provides a Docker setup for easy deployment and inference. The Docker container includes a FastAPI server for REST API inference and supports command-line inference.  The API request and response format are suitable for running as a AWS Sagemaker inference endpoint running on a ml.g4dn.xlarge and the inference AMI version al2-ami-sagemaker-inference-gpu-3-1, where it is able to infer at a rate of 5-10 seconds per tile.
+
+### Building the Docker Image
+
+```bash
+docker buildx build --platform linux/amd64 -t pix2poly .
+```
+
+### Running the API Server
+
+The Docker container automatically starts a FastAPI server on port 8080. You can run it with:
+
+```bash
+docker run -p 8080:8080 pix2poly
+```
+
+The API server will automatically download the pretrained model files on first startup and provide the following endpoints:
+
+- `POST /invocations` - Main inference endpoint for processing images
+- `GET /ping` - Health check endpoint
+
+#### API Usage
+
+The `/invocations` endpoint accepts images in multiple formats:
+
+1. **File Upload (multipart/form-data):**
+```bash
+curl -X POST "http://localhost:8080/invocations" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@your_image.jpg"
+```
+
+2. **Base64 Encoded Image:**
+```bash
+curl -X POST "http://localhost:8080/invocations" \
+     -H "Content-Type: application/json" \
+     -d '{"image": "base64_encoded_image_data"}'
+```
+
+3. **Raw Image Data:**
+```bash
+curl -X POST "http://localhost:8080/invocations" \
+     -H "Content-Type: image/jpeg" \
+     --data-binary @your_image.jpg
+```
+
+The API returns JSON with the detected polygons:
+
+```text
+{
+  "polygons": [
+    [[x1, y1], [x2, y2], ...],
+    ...
+  ]
+}
+```
+
+### Environment Variables
+
+You can customize the Docker container behavior with these environment variables:
+
+- `MODEL_URL`: URL to download the pretrained model files (default: `https://github.com/safelease/Pix2Poly/releases/download/main/runs_share.zip`)
+- `API_KEY`: Optional API key for authentication (if not set, authentication is disabled)
+
+Example with custom configuration:
+```bash
+docker run -p 8080:8080 \
+  -e MODEL_URL=https://github.com/safelease/Pix2Poly/releases/download/main/runs_share.zip \
+  -e API_KEY=your_secret_key \
+  pix2poly
+```
+
